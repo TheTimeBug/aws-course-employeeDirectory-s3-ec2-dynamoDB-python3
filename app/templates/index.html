@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Directory - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-users me-2"></i>Employee Directory</h1>
+            <div>
+                <a href="{{ url_for('add_employee') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-1"></i>Add New Employee
+                </a>
+            </div>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search employees..." onkeyup="filterEmployees()">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="departmentFilter" onchange="filterEmployees()">
+                            <option value="">All Departments</option>
+                            {% for dept in employees|map(attribute='department')|unique|sort %}
+                                {% if dept %}
+                                    <option value="{{ dept }}">{{ dept }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="positionFilter" onchange="filterEmployees()">
+                            <option value="">All Positions</option>
+                            {% for pos in employees|map(attribute='position')|unique|sort %}
+                                {% if pos %}
+                                    <option value="{{ pos }}">{{ pos }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>{{ employees|length }}</h4>
+                                <p class="mb-0">Total Employees</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>{{ employees|map(attribute='department')|unique|list|length }}</h4>
+                                <p class="mb-0">Departments</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-building fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>{{ employees|map(attribute='position')|unique|list|length }}</h4>
+                                <p class="mb-0">Positions</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-briefcase fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>{{ employees|selectattr('profile_picture_url')|list|length }}</h4>
+                                <p class="mb-0">With Photos</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-camera fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees Grid -->
+        {% if employees %}
+            <div class="row" id="employeesGrid">
+                {% for employee in employees %}
+                    <div class="col-lg-4 col-md-6 mb-4 employee-card-container" 
+                         data-name="{{ employee.full_name.lower() }}"
+                         data-department="{{ employee.department.lower() }}"
+                         data-position="{{ employee.position.lower() }}"
+                         data-email="{{ employee.email.lower() }}">
+                        <div class="card employee-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start">
+                                    <div class="me-3">
+                                        {% if employee.profile_picture_url %}
+                                            <img src="{{ employee.profile_picture_url }}" 
+                                                 alt="{{ employee.full_name }}" 
+                                                 class="profile-picture">
+                                        {% else %}
+                                            <div class="no-profile-picture">
+                                                {{ employee.first_name[0] }}{{ employee.last_name[0] }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1">{{ employee.full_name }}</h5>
+                                        <p class="text-muted mb-1">{{ employee.position }}</p>
+                                        <span class="badge bg-secondary department-badge">{{ employee.department }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <p class="card-text mb-2">
+                                        <i class="fas fa-envelope me-2"></i>{{ employee.email }}
+                                    </p>
+                                    {% if employee.phone %}
+                                        <p class="card-text mb-2">
+                                            <i class="fas fa-phone me-2"></i>{{ employee.phone }}
+                                        </p>
+                                    {% endif %}
+                                    {% if employee.hire_date %}
+                                        <p class="card-text mb-2">
+                                            <i class="fas fa-calendar me-2"></i>Hired: {{ employee.hire_date }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="{{ url_for('view_employee', employee_id=employee.employee_id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <a href="{{ url_for('edit_employee', employee_id=employee.employee_id) }}" 
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-edit me-1"></i>Edit
+                                    </a>
+                                    <form method="POST" action="{{ url_for('delete_employee', employee_id=employee.employee_id) }}" 
+                                          class="d-inline" onsubmit="return confirmDelete('{{ employee.full_name }}')">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- No results message (hidden by default) -->
+            <div id="noResults" class="text-center py-5" style="display: none;">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No employees found</h4>
+                <p class="text-muted">Try adjusting your search criteria</p>
+            </div>
+        {% else %}
+            <!-- Empty state -->
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-5x text-muted mb-4"></i>
+                <h2 class="text-muted">No Employees Yet</h2>
+                <p class="text-muted mb-4">Get started by adding your first employee to the directory.</p>
+                <a href="{{ url_for('add_employee') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>Add First Employee
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterEmployees() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const departmentFilter = document.getElementById('departmentFilter').value.toLowerCase();
+    const positionFilter = document.getElementById('positionFilter').value.toLowerCase();
+    
+    const employeeCards = document.querySelectorAll('.employee-card-container');
+    let visibleCount = 0;
+    
+    employeeCards.forEach(card => {
+        const name = card.dataset.name;
+        const department = card.dataset.department;
+        const position = card.dataset.position;
+        const email = card.dataset.email;
+        
+        const matchesSearch = !searchTerm || 
+            name.includes(searchTerm) || 
+            email.includes(searchTerm) || 
+            department.includes(searchTerm) || 
+            position.includes(searchTerm);
+        
+        const matchesDepartment = !departmentFilter || department === departmentFilter;
+        const matchesPosition = !positionFilter || position.includes(positionFilter.toLowerCase());
+        
+        if (matchesSearch && matchesDepartment && matchesPosition) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Show/hide no results message
+    const noResults = document.getElementById('noResults');
+    if (noResults) {
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+}
+
+// Clear filters function
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('departmentFilter').value = '';
+    document.getElementById('positionFilter').value = '';
+    filterEmployees();
+}
+</script>
+{% endblock %}

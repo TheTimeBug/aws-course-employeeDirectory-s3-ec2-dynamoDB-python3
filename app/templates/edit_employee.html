@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ employee.full_name }} - Employee Directory{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>Edit Employee: {{ employee.full_name }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="employeeForm">
+                    <div class="row">
+                        <!-- Personal Information -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Personal Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ employee.first_name }}" required maxlength="50">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ employee.last_name }}" required maxlength="50">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ employee.email }}" required maxlength="100">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ employee.phone }}" maxlength="20" placeholder="(555) 123-4567">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="hire_date" class="form-label">Hire Date</label>
+                                <input type="date" class="form-control" id="hire_date" name="hire_date" 
+                                       value="{{ employee.hire_date }}">
+                            </div>
+                        </div>
+
+                        <!-- Work Information -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Work Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="position" class="form-label">Position <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="position" name="position" 
+                                       value="{{ employee.position }}" required maxlength="100">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="department" name="department" 
+                                       value="{{ employee.department }}" required maxlength="50">
+                                <div class="form-text">Common departments: Engineering, Marketing, Sales, HR, Finance</div>
+                            </div>
+
+                            <!-- Current Profile Picture -->
+                            {% if employee.profile_picture_url %}
+                            <div class="mb-3">
+                                <label class="form-label">Current Profile Picture</label>
+                                <div class="text-center">
+                                    <img src="{{ employee.profile_picture_url }}" 
+                                         alt="{{ employee.full_name }}" 
+                                         class="profile-picture-large mb-2">
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="removeProfilePicture()">
+                                            <i class="fas fa-trash me-1"></i>Remove Picture
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Profile Picture Upload -->
+                            <div class="mb-3">
+                                <label for="profile_picture" class="form-label">
+                                    {% if employee.profile_picture_url %}Update Profile Picture{% else %}Profile Picture{% endif %}
+                                </label>
+                                <input type="file" class="form-control" id="profile_picture" name="profile_picture" 
+                                       accept="image/*" onchange="previewImage(this)">
+                                <div class="form-text">
+                                    {% if employee.profile_picture_url %}
+                                        Leave empty to keep current picture. Upload a new image to replace it.
+                                    {% else %}
+                                        Supported formats: PNG, JPG, JPEG, GIF (Max 5MB)
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- New Image Preview -->
+                            <div class="mb-3">
+                                <img id="imagePreview" src="#" alt="New Profile Preview" 
+                                     class="profile-picture-large mx-auto d-block" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Information (Read-only) -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">System Information</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Employee ID</label>
+                                    <input type="text" class="form-control" value="{{ employee.employee_id }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Created</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ employee.created_at[:19] if employee.created_at else 'N/A' }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Last Updated</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ employee.updated_at[:19] if employee.updated_at else 'N/A' }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <a href="{{ url_for('view_employee', employee_id=employee.employee_id) }}" class="btn btn-secondary me-2">
+                                        <i class="fas fa-arrow-left me-1"></i>Cancel
+                                    </a>
+                                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-home me-1"></i>Back to Directory
+                                    </a>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-outline-secondary me-2" onclick="resetForm()">
+                                        <i class="fas fa-undo me-1"></i>Reset Changes
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change History Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Change Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Changes will be saved to the database and any updated profile picture will be uploaded to S3 storage.
+                    The "Last Updated" timestamp will be automatically updated when you save.
+                </div>
+                <div id="changesSummary" class="d-none">
+                    <h6>Pending Changes:</h6>
+                    <ul id="changesList"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Edit Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Important Notes</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Email addresses must be unique</li>
+                            <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>Required fields cannot be empty</li>
+                            <li><i class="fas fa-info-circle text-info me-2"></i>Employee ID cannot be changed</li>
+                            <li><i class="fas fa-info-circle text-info me-2"></i>Timestamps are managed automatically</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Profile Picture</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Maximum file size: 5MB</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Supported formats: PNG, JPG, JPEG, GIF</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Square images work best</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Old picture is automatically replaced</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Store original form values for change detection
+const originalValues = {
+    first_name: '{{ employee.first_name }}',
+    last_name: '{{ employee.last_name }}',
+    email: '{{ employee.email }}',
+    phone: '{{ employee.phone }}',
+    hire_date: '{{ employee.hire_date }}',
+    position: '{{ employee.position }}',
+    department: '{{ employee.department }}'
+};
+
+// Form validation
+document.getElementById('employeeForm').addEventListener('submit', function(e) {
+    const firstName = document.getElementById('first_name').value.trim();
+    const lastName = document.getElementById('last_name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const position = document.getElementById('position').value.trim();
+    const department = document.getElementById('department').value.trim();
+    
+    if (!firstName || !lastName || !email || !position || !department) {
+        e.preventDefault();
+        alert('Please fill in all required fields marked with *');
+        return false;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Please enter a valid email address');
+        return false;
+    }
+    
+    // File size validation
+    const fileInput = document.getElementById('profile_picture');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (file.size > maxSize) {
+            e.preventDefault();
+            alert('Profile picture must be smaller than 5MB');
+            return false;
+        }
+    }
+    
+    return true;
+});
+
+// Auto-format phone number
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 6) {
+        value = `(${value.slice(0,3)}) ${value.slice(3,6)}-${value.slice(6,10)}`;
+    } else if (value.length >= 3) {
+        value = `(${value.slice(0,3)}) ${value.slice(3)}`;
+    }
+    e.target.value = value;
+});
+
+// Track changes
+document.addEventListener('input', function(e) {
+    if (e.target.form && e.target.form.id === 'employeeForm') {
+        updateChangesSummary();
+    }
+});
+
+// Update changes summary
+function updateChangesSummary() {
+    const changes = [];
+    const formData = new FormData(document.getElementById('employeeForm'));
+    
+    for (const [key, value] of formData.entries()) {
+        if (originalValues.hasOwnProperty(key) && originalValues[key] !== value) {
+            changes.push(`${key.replace('_', ' ').toUpperCase()}: "${originalValues[key]}" → "${value}"`);
+        }
+    }
+    
+    const fileInput = document.getElementById('profile_picture');
+    if (fileInput.files.length > 0) {
+        changes.push('PROFILE PICTURE: New image selected');
+    }
+    
+    const summaryDiv = document.getElementById('changesSummary');
+    const changesList = document.getElementById('changesList');
+    
+    if (changes.length > 0) {
+        changesList.innerHTML = changes.map(change => `<li>${change}</li>`).join('');
+        summaryDiv.classList.remove('d-none');
+    } else {
+        summaryDiv.classList.add('d-none');
+    }
+}
+
+// Reset form to original values
+function resetForm() {
+    if (confirm('Are you sure you want to reset all changes? This will revert all fields to their original values.')) {
+        document.getElementById('first_name').value = originalValues.first_name;
+        document.getElementById('last_name').value = originalValues.last_name;
+        document.getElementById('email').value = originalValues.email;
+        document.getElementById('phone').value = originalValues.phone;
+        document.getElementById('hire_date').value = originalValues.hire_date;
+        document.getElementById('position').value = originalValues.position;
+        document.getElementById('department').value = originalValues.department;
+        document.getElementById('profile_picture').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        updateChangesSummary();
+    }
+}
+
+// Remove profile picture (placeholder function)
+function removeProfilePicture() {
+    if (confirm('Are you sure you want to remove the current profile picture? This action cannot be undone.')) {
+        // This would need to be implemented with an AJAX call to the server
+        alert('Profile picture removal functionality would be implemented here.');
+    }
+}
+
+// Warn user about unsaved changes
+let formChanged = false;
+document.getElementById('employeeForm').addEventListener('input', function() {
+    formChanged = true;
+});
+
+document.getElementById('employeeForm').addEventListener('submit', function() {
+    formChanged = false;
+});
+
+window.addEventListener('beforeunload', function(e) {
+    if (formChanged) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return e.returnValue;
+    }
+});
+
+// Initialize change tracking on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateChangesSummary();
+});
+</script>
+{% endblock %}

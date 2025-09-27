@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Add Employee - Employee Directory{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Add New Employee
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="employeeForm">
+                    <div class="row">
+                        <!-- Personal Information -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Personal Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required maxlength="50">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required maxlength="50">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required maxlength="100">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" maxlength="20" placeholder="(555) 123-4567">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="hire_date" class="form-label">Hire Date</label>
+                                <input type="date" class="form-control" id="hire_date" name="hire_date">
+                            </div>
+                        </div>
+
+                        <!-- Work Information -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Work Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="position" class="form-label">Position <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="position" name="position" required maxlength="100" placeholder="Software Engineer">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="department" name="department" required maxlength="50" placeholder="Engineering">
+                                <div class="form-text">Common departments: Engineering, Marketing, Sales, HR, Finance</div>
+                            </div>
+
+                            <!-- Profile Picture Upload -->
+                            <div class="mb-3">
+                                <label for="profile_picture" class="form-label">Profile Picture</label>
+                                <input type="file" class="form-control" id="profile_picture" name="profile_picture" 
+                                       accept="image/*" onchange="previewImage(this)">
+                                <div class="form-text">Supported formats: PNG, JPG, JPEG, GIF (Max 5MB)</div>
+                            </div>
+
+                            <!-- Image Preview -->
+                            <div class="mb-3">
+                                <img id="imagePreview" src="#" alt="Profile Preview" 
+                                     class="profile-picture-large mx-auto d-block" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i>Cancel
+                                </a>
+                                <div>
+                                    <button type="reset" class="btn btn-outline-secondary me-2">
+                                        <i class="fas fa-undo me-1"></i>Reset
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>Add Employee
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Help & Guidelines
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Required Fields</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>First Name</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Last Name</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Email Address</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Position</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Department</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Tips</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Use a clear, professional profile picture</li>
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Email addresses must be unique</li>
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Use consistent department names</li>
+                            <li><i class="fas fa-lightbulb text-warning me-2"></i>Include area code for phone numbers</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+document.getElementById('employeeForm').addEventListener('submit', function(e) {
+    const firstName = document.getElementById('first_name').value.trim();
+    const lastName = document.getElementById('last_name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const position = document.getElementById('position').value.trim();
+    const department = document.getElementById('department').value.trim();
+    
+    if (!firstName || !lastName || !email || !position || !department) {
+        e.preventDefault();
+        alert('Please fill in all required fields marked with *');
+        return false;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        e.preventDefault();
+        alert('Please enter a valid email address');
+        return false;
+    }
+    
+    // File size validation
+    const fileInput = document.getElementById('profile_picture');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (file.size > maxSize) {
+            e.preventDefault();
+            alert('Profile picture must be smaller than 5MB');
+            return false;
+        }
+    }
+    
+    return true;
+});
+
+// Auto-format phone number
+document.getElementById('phone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 6) {
+        value = `(${value.slice(0,3)}) ${value.slice(3,6)}-${value.slice(6,10)}`;
+    } else if (value.length >= 3) {
+        value = `(${value.slice(0,3)}) ${value.slice(3)}`;
+    }
+    e.target.value = value;
+});
+
+// Reset form including image preview
+document.querySelector('button[type="reset"]').addEventListener('click', function() {
+    setTimeout(() => {
+        document.getElementById('imagePreview').style.display = 'none';
+    }, 10);
+});
+</script>
+{% endblock %}

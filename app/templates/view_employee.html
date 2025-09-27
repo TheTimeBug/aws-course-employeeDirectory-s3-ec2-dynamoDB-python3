@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}{{ employee.full_name }} - Employee Directory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Employee Profile Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user me-2"></i>Employee Profile
+                    </h3>
+                    <div>
+                        <a href="{{ url_for('edit_employee', employee_id=employee.employee_id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        <form method="POST" action="{{ url_for('delete_employee', employee_id=employee.employee_id) }}" 
+                              class="d-inline ms-2" onsubmit="return confirmDelete('{{ employee.full_name }}')">
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Profile Picture -->
+                    <div class="col-md-4 text-center">
+                        {% if employee.profile_picture_url %}
+                            <img src="{{ employee.profile_picture_url }}" 
+                                 alt="{{ employee.full_name }}" 
+                                 class="profile-picture-large mb-3">
+                        {% else %}
+                            <div class="no-profile-picture-large mb-3 mx-auto">
+                                {{ employee.first_name[0] }}{{ employee.last_name[0] }}
+                            </div>
+                        {% endif %}
+                        
+                        <h4>{{ employee.full_name }}</h4>
+                        <p class="text-muted mb-2">{{ employee.position }}</p>
+                        <span class="badge bg-primary">{{ employee.department }}</span>
+                    </div>
+                    
+                    <!-- Employee Details -->
+                    <div class="col-md-8">
+                        <h5 class="mb-3">Contact Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Email:</strong></div>
+                            <div class="col-sm-8">
+                                <a href="mailto:{{ employee.email }}">{{ employee.email }}</a>
+                            </div>
+                        </div>
+                        
+                        {% if employee.phone %}
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Phone:</strong></div>
+                            <div class="col-sm-8">
+                                <a href="tel:{{ employee.phone }}">{{ employee.phone }}</a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <h5 class="mb-3 mt-4">Work Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Position:</strong></div>
+                            <div class="col-sm-8">{{ employee.position }}</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Department:</strong></div>
+                            <div class="col-sm-8">{{ employee.department }}</div>
+                        </div>
+                        
+                        {% if employee.hire_date %}
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Hire Date:</strong></div>
+                            <div class="col-sm-8">{{ employee.hire_date }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        <h5 class="mb-3 mt-4">System Information</h5>
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Employee ID:</strong></div>
+                            <div class="col-sm-8"><code>{{ employee.employee_id }}</code></div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Created:</strong></div>
+                            <div class="col-sm-8">{{ employee.created_at[:19] if employee.created_at else 'N/A' }}</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4"><strong>Last Updated:</strong></div>
+                            <div class="col-sm-8">{{ employee.updated_at[:19] if employee.updated_at else 'N/A' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documents Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>Documents
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="fas fa-upload me-1"></i>Upload Document
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="documentsContainer">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading documents...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Directory
+                    </a>
+                    <div>
+                        <a href="{{ url_for('edit_employee', employee_id=employee.employee_id) }}" class="btn btn-primary me-2">
+                            <i class="fas fa-edit me-1"></i>Edit Employee
+                        </a>
+                        <button class="btn btn-success" onclick="exportEmployeeData()">
+                            <i class="fas fa-download me-1"></i>Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="document_type" class="form-label">Document Type</label>
+                        <select class="form-select" id="document_type" name="document_type" required>
+                            <option value="">Select document type...</option>
+                            <option value="resume">Resume/CV</option>
+                            <option value="contract">Employment Contract</option>
+                            <option value="id">ID Document</option>
+                            <option value="certificate">Certificate</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="document_file" class="form-label">File</label>
+                        <input type="file" class="form-control" id="document_file" name="document_file" required>
+                        <div class="form-text">Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-1"></i>Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load documents when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadDocuments();
+});
+
+// Load employee documents
+function loadDocuments() {
+    const container = document.getElementById('documentsContainer');
+    
+    // Simulate API call to get documents
+    // In a real implementation, this would be an AJAX call to get documents
+    setTimeout(() => {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                <h6 class="text-muted">No documents uploaded yet</h6>
+                <p class="text-muted">Upload documents using the button above.</p>
+            </div>
+        `;
+    }, 1000);
+}
+
+// Handle document upload
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading...';
+    submitBtn.disabled = true;
+    
+    // Simulate upload (replace with actual API call)
+    setTimeout(() => {
+        // Reset form and modal
+        this.reset();
+        bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+        
+        // Show success message
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show';
+        alert.innerHTML = `
+            Document uploaded successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('main').insertBefore(alert, document.querySelector('main').firstChild);
+        
+        // Reload documents
+        loadDocuments();
+        
+        // Reset button
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        
+        // Auto-hide alert
+        setTimeout(() => {
+            if (alert.parentNode) {
+                bootstrap.Alert.getInstance(alert).close();
+            }
+        }, 3000);
+    }, 2000);
+});
+
+// Export employee data
+function exportEmployeeData() {
+    const employeeData = {
+        id: '{{ employee.employee_id }}',
+        name: '{{ employee.full_name }}',
+        email: '{{ employee.email }}',
+        position: '{{ employee.position }}',
+        department: '{{ employee.department }}',
+        phone: '{{ employee.phone }}',
+        hire_date: '{{ employee.hire_date }}',
+        created_at: '{{ employee.created_at }}',
+        updated_at: '{{ employee.updated_at }}'
+    };
+    
+    const dataStr = JSON.stringify(employeeData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `{{ employee.full_name.replace(' ', '_') }}_data.json`;
+    link.click();
+}
+
+// Copy employee ID to clipboard
+function copyEmployeeId() {
+    const employeeId = '{{ employee.employee_id }}';
+    navigator.clipboard.writeText(employeeId).then(() => {
+        // Show temporary tooltip or alert
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-info alert-dismissible fade show';
+        alert.innerHTML = `
+            Employee ID copied to clipboard!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('main').insertBefore(alert, document.querySelector('main').firstChild);
+        
+        setTimeout(() => {
+            if (alert.parentNode) {
+                bootstrap.Alert.getInstance(alert).close();
+            }
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}
